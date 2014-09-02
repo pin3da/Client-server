@@ -44,9 +44,13 @@ bool process(zmqpp::socket &socket, user &usr) {
       user new_user;
       users.insert(new_user);
       usr = new_user;
-      stringstream ss;
-      ss << "The new user has been created, your id is : " << new_user.id;
-      return go_out(ss.str());
+      zmqpp::message message;
+      message << "register" << usr.id;
+      socket.send(message);
+      string response;
+      socket.receive(response);
+      //ss << "The new user has been created, your id is : " << new_user.id;
+      return go_out(response);
     } else if (cmd == "2") {
       cout << "Please enter your id : " << endl;
       int cur_id;

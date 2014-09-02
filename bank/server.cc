@@ -2,27 +2,80 @@ using namespace std;
 #include <zmqpp/zmqpp.hpp>
 #include <bits/stdc++.h>
 
-
-void check(zmqpp::message &request, string & response) {
-
+template <class T>
+string to_string(T t) {
+  stringstream ss;
+  ss<<t;
+  return t.str();
 }
 
-void add(zmqpp::message &request, string & response) {
+unordered_map<int, int> accounts;
 
+void regis(zmqpp::message &request, string &response) {
+  int id;
+  request >> id;
+  if (accounts.count(id))
+    response = "The account is already taken";
+  else {
+    accounts[id] = 0;
+    response = "The account was successfully created";
+  }
 }
 
-void withdraw(zmqpp::message &request, string & response) {
-
+void check(zmqpp::message &request, string &response) {
+  int id;
+  request >> id;
+  if (accounts.count(id))
+    response = to_string(accounts[id]);
+  else
+    response = "This account does not exist";
 }
-void transfer(zmqpp::message &request, string & response) {
 
+void add(zmqpp::message &request, string &response) {
+  int id, value;
+  request >> id >> value;
+  if (accounts.count(id)) {
+    accounts[id] += value;
+    response = "Value added, new amount : " + to_string(accounts[id]);
+  } else
+    response = "This account does not exist";
+}
+
+void withdraw(zmqpp::message &request, string &response) {
+  int id, value;
+  request >> id >> value;
+  if (accounts.count(id)) {
+    if (accounts[id] >= value) {
+      accounts[id] -= value;
+      response = "Value withdrawn, new amount : " + to_string(accounts[id]);
+    } else {
+      response = "Not enough Funds, Operation Canceled";
+    }
+  } else
+    response = "This account does not exist";
+}
+
+void transfer(zmqpp::message &request, string &response) {
+  int id, value, dest_id;
+  request >> id >> value >> dest_id;
+  if (accounts.count(id)) {
+    if (accounts[id] >= value) {
+      accounts[id] -= value;
+      accounts[dest_id] += value;
+      response = "Transaction done, new amount : " + to_string(accounts[id]);
+    } else {
+      response = "Not enough Funds, Operation Canceled";
+    }
+  } else
+    response = "This account does not exist";
 }
 
 void dispatch(zmqpp::message &request, string &response) {
   response = "Manuel was here";
   string command;
   request >> command;
-  if      (command == "check") check(request, response);
+  if      (command == "register") regis(request, response);
+  else if (command == "check") check(request, response);
   else if (command == "add") add(request, response);
   else if (command == "withdraw") withdraw(request, response);
   else if (command == "transfer") transfer(request, response);
