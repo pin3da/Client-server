@@ -1,8 +1,14 @@
 Bank
 ====
 
+Client/server example of a little bank operations.
 
-To install the 0mq 'highlevel' C++ binding go to [zmqpp Repository](https://github.com/zeromq/zmqpp)
+Disclaimer: Never use this bank!
+
+
+### Dependencies
+
+- To install the 0mq 'highlevel' C++ binding go to [zmqpp Repository](https://github.com/zeromq/zmqpp)
 
 
 _____
