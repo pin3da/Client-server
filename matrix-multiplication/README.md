@@ -32,6 +32,13 @@ Example:
 
     make
 
+### Test
+
+(After compiling)
+
+    cd test
+    make
+    ./tester
 
 ### Dependencies
 
