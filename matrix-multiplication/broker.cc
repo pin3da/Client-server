@@ -18,6 +18,7 @@ struct entry {
 void process_client(zmqpp::message &req, zmqpp::socket &backend) {
   string address, empty;
   req >> address >> empty;
+  cout << "Message from : " << address << endl;
   assert(empty.size() == 0);
   int m, n, o;
   req >> m >> n >> o;

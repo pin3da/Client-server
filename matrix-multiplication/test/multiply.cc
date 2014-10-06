@@ -18,7 +18,7 @@ int main() {
 
     for (int i = 0; i < m; ++i) {
       for (int j = 0; j < o; j++)
-        cout << ans[i][j] << " ";
+        cout << setprecision(10) << ans[i][j] << " ";
       cout << endl;
     }
   }

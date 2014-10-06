@@ -1,11 +1,12 @@
 #include <zmqpp/zmqpp.hpp>
 #include <bits/stdc++.h>
+#define D(x) cout << #x " = " << (x) << endl
 
 using namespace std;
 
 
 // Basic req-rep client using REQ socket.
-void process(zmqpp::socket &socket, int m, int n, int o, vector<vector<double>> Ma, vector<vector<double>> Mb) {
+void process(zmqpp::socket &socket,const int &m,const int &n,const int &o,const vector<vector<double>> &Ma,const vector<vector<double>> &Mb) {
   zmqpp::message message;
   message << m << n << o;
   for (int i = 0; i < m; ++i)
@@ -16,7 +17,7 @@ void process(zmqpp::socket &socket, int m, int n, int o, vector<vector<double>> 
     for (int j = 0; j < o; ++j)
       message << Mb[i][j];
 
-  vector<vector<double>> result(n, vector<double>(o));
+  vector<vector<double>> result(m, vector<double>(o));
   socket.send(message);
   zmqpp::message answer;
   socket.receive(answer);
@@ -26,10 +27,10 @@ void process(zmqpp::socket &socket, int m, int n, int o, vector<vector<double>> 
       answer >> result[i][j];
 
 
-  cout << "Answer :\n";
+  // cout << "Answer :\n";
   for (int i = 0; i < m; ++i) {
     for (int j = 0; j < o; ++j)
-      cout << result[i][j] << " ";
+      cout << setprecision(10) << result[i][j] << " ";
     cout << '\n';
   }
 }
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
   const string endpoint = "tcp://localhost:6666";
   zmqpp::context context;
   zmqpp::socket socket (context, zmqpp::socket_type::request);
-  cout << "Connecting to : " << endpoint << endl;
+  cerr << "Connecting to : " << endpoint << endl;
   socket.connect(endpoint);
 
   int n, m, o;
@@ -59,6 +60,6 @@ int main(int argc, char *argv[]) {
     process(socket, m, n, o, Ma, Mb);
   }
 
-  cout << "Finished." << endl;
+  cerr << "Finished." << endl;
   return 0;
 }

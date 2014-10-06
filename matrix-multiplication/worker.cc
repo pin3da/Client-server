@@ -42,6 +42,7 @@ int main(int argc, char *argv[]) {
     zmqpp::message response;
     dispatch(message, response);
     socket.send(response);
+    cout << "Responded" << endl;
   }
   cout << "Finished." << endl;
   return 0;

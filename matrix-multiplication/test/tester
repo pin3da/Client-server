@@ -1,0 +1,27 @@
+#! /bin/bash
+
+echo "Killing all processes previously executed"
+killall -9 broker 2> /dev/null
+killall -9 client 2> /dev/null
+killall -9 worker 2> /dev/null
+
+
+../broker > /dev/null &
+for i in `seq 1 5`;
+do
+  ../worker > /dev/null &
+done
+
+for i in `seq 1 10`;
+do
+  ./generator > tc$i.in
+  ./multiply < tc$i.in > tc$i.out
+  ../client < tc$i.in > tmp$i.out 2> /dev/null
+  diff tc$i.out tmp$i.out
+  if [ "$?" = "1" ]; then
+    echo -e "\e[31mTest failed"
+    exit 1
+  fi
+done
+
+echo -e "\e[32mTest passed"
