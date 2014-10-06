@@ -7,6 +7,10 @@ using namespace std;
 
 void dispatch(zmqpp::message &req, zmqpp::message &res) {
   int m, n, o;
+  string address;
+  int part;
+  req >> address >> part;
+
   req >> m >> n >> o;
   vector<vector<double>> Ma(m, vector<double> (n)), Mb(n, vector<double>(o));
 
@@ -20,6 +24,7 @@ void dispatch(zmqpp::message &req, zmqpp::message &res) {
 
   vector<vector<double>> ans = multiply(Ma, Mb);
 
+  res << address << part;
   for (int i = 0; i < m; ++i)
     for (int j = 0; j < o; ++j)
       res << ans[i][j];

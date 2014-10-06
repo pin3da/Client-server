@@ -5,15 +5,23 @@
 
 using namespace std;
 
-
 struct entry {
-  string client_id;
   vector<vector<double>> ans;
-  int missing;
+  int m,o;
+  int parts;
+  entry(){}
+  entry(int m, int o, int p) : m(m), o(o), parts(p) {
+    ans.assign(m, vector<double> (o, 0));
+  }
+
+  /*
   bool operator < (const entry &o) const {
     return client_id < o.client_id;
-  }
+  }*/
 };
+
+map<string, entry> state;
+const int rows_per_worker = 10;
 
 void process_client(zmqpp::message &req, zmqpp::socket &backend) {
   string address, empty;
@@ -32,26 +40,65 @@ void process_client(zmqpp::message &req, zmqpp::socket &backend) {
     for (int j = 0; j < o; ++j)
       req >> Mb[i][j];
 
+  int parts = (m + rows_per_worker - 1) / rows_per_worker;
+  state[address] = entry(m, o, parts);
 
-  zmqpp::message message;
-  message << address << empty;
-  message << m << n << o;
+  for (int k = 0; k < parts; ++k) {
+    zmqpp::message message;
+    message << address << empty;
+    message << address << k;
+    message << rows_per_worker << n << o;
 
-  for (int i = 0; i < m; ++i)
-    for (int j = 0; j < n; ++j)
-      message << Ma[i][j];
+    for (int i = 0; i < rows_per_worker; ++i)
+      for (int j = 0; j < n; ++j)
+        if (i + rows_per_worker * k < m)
+          message << Ma[i + rows_per_worker * k][j];
+        else
+          message << 0; //dummy zeroes
 
-  for (int i = 0; i < n; ++i)
-    for (int j = 0; j < o; ++j)
-      message << Mb[i][j];
+    for (int i = 0; i < n; ++i)
+      for (int j = 0; j < o; ++j)
+        message << Mb[i][j];
 
-  backend.send(message);
-  cout << "Message forwarded to backend, waiting for an answer" << endl;
+    backend.send(message);
+    cout << "Part forwarded to backend, waiting for an answer" << endl;
+  }
+
 }
 
-void process_worker(zmqpp::message &req, zmqpp::message &res) {
-  // jus streaming answer from worker
-  res.copy(req);
+bool process_worker(zmqpp::message &req, zmqpp::message &res) {
+  string address, empty;
+  int part;
+  req >> address >> empty;
+  assert(empty.size() == 0);
+  req >> address >> part;
+  if (state.count(address) == 0)
+    cout << "Error : client not found" << endl;
+
+  int o = state[address].o;
+  int m = state[address].m;
+  double tmp;
+  vector<vector<double>> &ans = state[address].ans;
+  for (int i = 0; i < rows_per_worker; ++i) {
+    for (int j = 0; j < o; ++j) {
+      if (i + part * rows_per_worker < m)
+        req >> ans[i + part * rows_per_worker][j];
+      else
+        req >> tmp;
+    }
+  }
+
+  state[address].parts--;
+  if (state[address].parts > 0)
+    return false;
+  res << address << empty;
+
+  for (int i = 0; i < m; ++i)
+    for (int j = 0; j < o; ++j)
+      res << ans[i][j];
+
+  return true;
+
 }
 
 int main() {
@@ -80,8 +127,8 @@ int main() {
         cout << "Reading message from worker" << endl;
         zmqpp::message req, res;
         backend.receive(req);
-        process_worker(req, res);
-        frontend.send(res);
+        if (process_worker(req, res))
+          frontend.send(res);
       }
     }
   }
