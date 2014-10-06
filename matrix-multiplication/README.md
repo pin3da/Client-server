@@ -3,7 +3,11 @@ Matrix Multiplication
 
 Distributed matrix multiplication example in 0mqpp
 
-At this moment, the broker just forward the whole matrix and the available worker will solve the problem.
+~~At this moment, the broker just forward the whole matrix and the available worker will solve the problem.~~
+
+
+At this moment, the broker breaks the matrix in sections of size "rows_per_worker" to distribute the work between workers.
+When all parts are computed the whole answer is sent to the client.
 
 The tasks are round-robined among all connected workers.
 
